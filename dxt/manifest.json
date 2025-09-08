@@ -1,0 +1,21 @@
+{
+  "dxt_version": "0.1",
+  "name": "eligibility-engine-mcp-server",
+  "display_name": "Eligibility Engine MCP Server",
+  "version": "1.0.0",
+  "description": "Eligibility Engine MCP Server",
+  "author": {
+    "name": "Carlos Vicens"
+  },
+  "server": {
+    "type": "binary",
+    "entry_point": "stdio_server",
+    "mcp_config": {
+      "command": "${__dirname}/stdio_server",
+      "args": [],
+      "env": {}
+    }
+  },
+  "tools_generated": true,
+  "license": "MIT"
+}
