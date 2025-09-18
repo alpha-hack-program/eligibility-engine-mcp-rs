@@ -195,17 +195,17 @@ where
 // Direct parameters structure for MCP (flattened)
 #[derive(Debug, Serialize, Deserialize, PartialEq, schemars::JsonSchema)]
 pub struct UnpaidLeaveDirectParams {
-    #[schemars(description = "Family relationship with the person who needs care. VALID VALUES: 'father', 'mother', 'son', 'daughter', 'spouse', 'partner', 'husband', 'wife', 'woman', 'man'. Example: 'mother'")]
+    #[schemars(description = "Family relationship with the person who needs care. VALID VALUES: 'father', 'mother', 'parent', 'son', 'daughter', 'spouse', 'partner', 'husband', 'wife', 'foster_parent'. Example: 'mother'")]
     pub relationship: String,
     
-    #[schemars(description = "Situation that motivates the need for care. VALID VALUES: 'birth', 'adoption', 'foster_care', 'multiple_birth', 'multiple_adoption', 'multiple_foster_care', 'illness', 'accident'. Example: 'birth'")]
+    #[schemars(description = "Situation that motivates the need for care. VALID VALUES: 'birth', 'adoption', 'foster_care', 'multiple_birth', 'multiple_adoption', 'multiple_foster_care', 'illness', 'accident'. If number of children born or adopted or fostered is greater than one at the same time, USE 'multiple_birth' or 'multiple_adoption' or 'multiple_foster_care'. Example: 'birth'")]
     pub situation: String,
     
-    #[schemars(description = "Is it a single-parent family? Accepts boolean values (true/false) or strings ('true'/'false'). Use exactly: true (for single-parent families) or false (for families with both parents). Example: true")]
+    #[schemars(description = "Is it a single-parent family? Accepts boolean values (true/false) or strings ('true'/'false'). Use exactly: true (for single-parent families) or false (for families with both parents). If no information regarding the family structure use always false. Example: 'I'm single and just had a baby' => true, 'I'm married and have 2 children' => false, 'My mother had an accident and I'm taking care of her' => false, 'My wife is pregnant and I'm taking care of her' => false")]
     #[serde(deserialize_with = "deserialize_bool_or_string")]
     pub single_parent_family: bool,
     
-    #[schemars(description = "Total number of children including newborn (required for Case B - third child or more). Accepts numbers (3) or strings ('3'). Use whole numbers. Example: 3")]
+    #[schemars(description = "Total number of children including newborn/adopted/fostered child. Only required when situation involves adding children ('birth', 'adoption', 'foster_care', 'multiple_birth', 'multiple_adoption', 'multiple_foster_care'). Accepts integer or string format. Example: 3")]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(deserialize_with = "deserialize_f64_or_string")]
     pub number_of_children: Option<f64>,
@@ -214,16 +214,16 @@ pub struct UnpaidLeaveDirectParams {
 // Internal structure for the ZEN engine (nested)
 #[derive(Debug, Serialize, Deserialize, PartialEq, schemars::JsonSchema)]
 pub struct UnpaidLeaveInput {
-    #[schemars(description = "Family relationship with the person who needs care. Valid values: father, mother, son, daughter, spouse, partner, husband, wife, woman, man")]
+    #[schemars(description = "Family relationship with the person who needs care. VALID VALUES: 'father', 'mother', 'parent', 'son', 'daughter', 'spouse', 'partner', 'husband', 'wife', 'foster_parent'. Example: 'mother'")]
     pub relationship: String,
     
-    #[schemars(description = "Situation that motivates the need for care. Valid values: birth, adoption, foster_care, multiple_birth, multiple_adoption, multiple_foster_care, illness, accident")]
+    #[schemars(description = "Situation that motivates the need for care. VALID VALUES: 'birth', 'adoption', 'foster_care', 'multiple_birth', 'multiple_adoption', 'multiple_foster_care', 'illness', 'accident'. If number of children born or adopted or fostered is greater than one at the same time, USE 'multiple_birth' or 'multiple_adoption' or 'multiple_foster_care'. Example: 'birth'")]
     pub situation: String,
     
-    #[schemars(description = "Is it a single-parent family or in single-parent situation?")]
+    #[schemars(description = "Is it a single-parent family or in single-parent situation? Accepts boolean values (true/false) or strings ('true'/'false'). Use exactly: true (for single-parent families) or false (for families with both parents). If no information regarding the family structure use always false. Example: 'I'm single and just had a baby' => true, 'I'm married and have 2 children' => false, 'My mother had an accident and I'm taking care of her' => false, 'My wife is pregnant and I'm taking care of her' => false")]
     pub single_parent_family: bool,
     
-    #[schemars(description = "Number of children including newborn if applicable")]
+    #[schemars(description = "Number of children including newborn ONLY if situation is 'birth' or 'adoption' or 'foster_care' or 'multiple_birth' or 'multiple_adoption' or 'multiple_foster_care'. Accepts numbers (3) or strings ('3'). Use whole numbers. Example: 3")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub number_of_children: Option<f64>,
 }
@@ -446,25 +446,10 @@ impl EligibilityEngine {
     /// Evaluates unpaid leave assistance eligibility according to fictional regulations
     /// 
     /// IMPORTANT: Use the exact values specified in each parameter.
-    /// 
-    /// EXAMPLES OF CORRECT CALLS:
-    /// 1. Single father with newborn:
-    ///    - relationship: "father"
-    ///    - situation: "birth"
-    ///    - single_parent_family: true
-    ///    - number_of_children: 1
-    /// 
-    /// 2. Care for sick mother (normal family):
-    ///    - relationship: "mother"  
-    ///    - situation: "illness"
-    ///    - single_parent_family: false
-    ///    
-    /// 3. Third child in normal family:
-    ///    - relationship: "mother"
-    ///    - situation: "birth"
-    ///    - single_parent_family: false
-    ///    - number_of_children: 3
-    #[tool(description = "Evaluates unpaid leave assistance eligibility according to legal regulations. Determines case (A-E) and amount (0€/500€/725€). CASES: A=Sick family care (725€), B=Third child+ (500€), C=Adoption (500€), D=Multiple (500€), E=Single-parent (500€). USE EXACT VALUES: relationship ('father'/'mother'/'son'/'daughter'/'spouse'/'husband'/'wife'/'woman'/'man'), situation ('birth'/'adoption'/'foster_care'/'multiple_birth'/'multiple_adoption'/'multiple_foster_care'/'illness'/'accident'), single_parent_family (true/false), number_of_children (number).")]
+    /// IMPORTANT: If number of children is greater than one, USE 'multiple_birth' or 'multiple_adoption' or 'multiple_foster_care'.
+    /// IMPORTANT: If no information regarding the family structure use always false.
+    /// IMPORTANT: If no information regarding the number of children use always 0.
+    #[tool(description = "Evaluates unpaid leave assistance eligibility according to legal regulations. Determines case (A-E) and amount (0€/500€/725€). CASES: A=Sick family care (725€), B=Third child+ (500€), C=Adoption (500€), D=Multiple (500€), E=Single-parent (500€). USE EXACT VALUES: relationship ('father'/'mother'/'parent'/'son'/'daughter'/'spouse'/'partner'/'husband'/'wife'/'foster_parent'), situation ('birth'/'adoption'/'foster_care'/'multiple_birth'/'multiple_adoption'/'multiple_foster_care'/'illness'/'accident'), single_parent_family (true/false), number_of_children (number).")]
     pub async fn evaluate_unpaid_leave_eligibility(
         &self, 
         Parameters(direct_params): Parameters<UnpaidLeaveDirectParams>
@@ -533,14 +518,17 @@ impl ServerHandler for EligibilityEngine {
                 "Eligibility Engine for leave assistance according to legal regulations. \
                  \n\n** IMPORTANT TOOL USAGE INSTRUCTIONS **\
                  \n\n1. ALWAYS use the EXACT values specified for each parameter, CASE SENSITIVE\
-                 \n\n2. For relationship, use ONLY: 'father', 'mother', 'son', 'daughter', 'spouse', 'husband', 'wife', 'woman', 'man'\
-                 \n\n3. For situation, use ONLY: 'birth', 'adoption', 'foster_care', 'multiple_birth', 'multiple_adoption', 'multiple_foster_care', 'illness', 'accident'\
-                 \n\n4. For single_parent_family, use ONLY: true (for single-parent families) or false (for families with both parents)\
-                 \n\n5. For number_of_children, use whole numbers (eg: 1, 2, 3, 4, 5)\
+                 \n\n2. For relationship, use ONLY: 'father', 'mother', 'parent', 'son', 'daughter', 'spouse', 'partner', 'husband', 'wife', 'foster_parent'\
+                 \n\n3. For situation, use ONLY: 'birth', 'adoption', 'foster_care', 'multiple_birth', 'multiple_adoption', 'multiple_foster_care', 'illness', 'accident'. If number of children is greater than one, USE 'multiple_birth' or 'multiple_adoption' or 'multiple_foster_care'\
+                 \n\n4. For single_parent_family, use ONLY: true (for single-parent families) or false (for families with both parents). If no information regarding the family structure use always false\
+                 \n\n5. For number_of_children, use whole numbers (eg: 1, 2, 3, 4, 5). ONLY if situation is 'birth' or 'adoption' or 'foster_care' or 'multiple_birth' or 'multiple_adoption' or 'multiple_foster_care'
                  \n\nCORRECT USAGE EXAMPLES:\
                  \n• Single father with baby: relationship='father', situation='birth', single_parent_family=true, number_of_children=1\
-                 \n• Son caring for sick father: relationship='father', situation='illness', single_parent_family=false\
+                 \n• Son caring for sick father: relationship='father', situation='illness', single_parent_family=false, number_of_children=0\
                  \n• Family with third child: relationship='mother', situation='birth', single_parent_family=false, number_of_children=3\
+                 \n• Family with multiple children: relationship='mother', situation='multiple_birth', single_parent_family=false, number_of_children=3\
+                 \n• Family with multiple children: relationship='mother', situation='multiple_adoption', single_parent_family=false, number_of_children=3\
+                 \n• Family with multiple children: relationship='mother', situation='multiple_foster_care', single_parent_family=false, number_of_children=3\
                  \n\nCASES EVALUATED:\
                  \nA) Sick/injured family care (725€/month)\
                  \nB) Third child+ with newborn (500€/month)\

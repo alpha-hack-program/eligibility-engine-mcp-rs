@@ -6,7 +6,7 @@
       "name": "request",
       "type": "inputNode",
       "content": {
-        "schema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"title\": \"Unpaid Leave Assistance Evaluation\",\n  \"description\": \"Schema to evaluate different cases of unpaid leave assistance\",\n  \"properties\": {\n    \"input\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"relationship\": {\n          \"type\": \"string\",\n          \"enum\": [\"father\", \"mother\", \"son\", \"daughter\", \"spouse\", \"partner\", \"husband\", \"wife\", \"woman\",\"man\"],\n          \"description\": \"Family relationship with the person who needs care\"\n        },\n        \"situation\": {\n          \"type\": \"string\",\n          \"enum\": [\"birth\", \"delivery\", \"adoption\", \"foster_care\", \"multiple_birth\", \"multiple_delivery\", \"multiple_adoption\", \"multiple_foster_care\", \"illness\", \"accident\"],\n          \"description\": \"Situation that motivates the need for care\"\n        },\n        \"single_parent_family\": {\n          \"type\": \"boolean\",\n          \"description\": \"Is it a single-parent family or in single-parent situation?\"\n        },\n        \"number_of_children\": {\n          \"type\": \"number\",\n          \"description\": \"Number of children including newborn if applicable\"\n        }\n      },\n      \"required\": [\"relationship\", \"situation\", \"single_parent_family\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"input\"],\n  \"additionalProperties\": false\n}"
+        "schema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"title\": \"Unpaid Leave Assistance Evaluation\",\n  \"description\": \"Schema to evaluate different cases of unpaid leave assistance\",\n  \"properties\": {\n    \"input\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"relationship\": {\n          \"type\": \"string\",\n          \"enum\": [\"father\", \"mother\", \"parent\", \"son\", \"daughter\", \"spouse\", \"partner\", \"husband\", \"wife\", \"foster_parent\"],\n          \"description\": \"Family relationship with the person who needs care\"\n        },\n        \"situation\": {\n          \"type\": \"string\",\n          \"enum\": [\"birth\", \"delivery\", \"adoption\", \"foster_care\", \"multiple_birth\", \"multiple_delivery\", \"multiple_adoption\", \"multiple_foster_care\", \"illness\", \"accident\"],\n          \"description\": \"Situation that motivates the need for care\"\n        },\n        \"single_parent_family\": {\n          \"type\": \"boolean\",\n          \"description\": \"Is it a single-parent family or in single-parent situation?\"\n        },\n        \"number_of_children\": {\n          \"type\": \"number\",\n          \"description\": \"Number of children including newborn if applicable\"\n        }\n      },\n      \"required\": [\"relationship\", \"situation\", \"single_parent_family\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"input\"],\n  \"additionalProperties\": false\n}"
       },
       "position": {
         "x": -40,
@@ -21,8 +21,8 @@
         "rules": [
           {
             "_id": "regla-005",
-            "_description": "Case E: Single-parent family with any child",
             "output-case": "\"E\"",
+            "_description": "Case E: Single-parent family with any child",
             "input-relationship": "true",
             "output-description": "\"Single-parent family with newborn\"",
             "output-tiene-derecho": "true",
@@ -34,8 +34,8 @@
           },
           {
             "_id": "regla-002",
-            "_description": "Case B: Third child or more with newborn",
             "output-case": "\"B\"",
+            "_description": "Case B: Third child or more with newborn",
             "input-relationship": "true",
             "output-description": "\"Third child or more with newborn\"",
             "output-tiene-derecho": "true",
@@ -47,8 +47,8 @@
           },
           {
             "_id": "9ec43eb2-484f-4fcf-9dd7-6510da30850c",
-            "_description": "The number of children must be 3 or more, must consult with administration",
             "output-case": "\"B\"",
+            "_description": "The number of children must be 3 or more, must consult with administration",
             "input-relationship": "true",
             "output-description": "\"The number of children must be 3 or more, must consult with administration\"",
             "output-tiene-derecho": "false",
@@ -60,8 +60,8 @@
           },
           {
             "_id": "regla-001",
-            "_description": "Case A: First-degree family care sick/injured",
             "output-case": "\"A\"",
+            "_description": "Case A: First-degree family care sick/injured",
             "input-relationship": "true",
             "output-description": "\"First-degree family care sick or accident victim\"",
             "output-tiene-derecho": "true",
@@ -73,8 +73,8 @@
           },
           {
             "_id": "regla-003",
-            "_description": "Case C: Adoption or foster care",
             "output-case": "\"C\"",
+            "_description": "Case C: Adoption or foster care",
             "input-relationship": "true",
             "output-description": "\"Adoption or foster care\"",
             "output-tiene-derecho": "true",
@@ -86,8 +86,8 @@
           },
           {
             "_id": "regla-004",
-            "_description": "Case D: Delivery, adoption or foster care multiple",
             "output-case": "\"D\"",
+            "_description": "Case D: Delivery, adoption or foster care multiple",
             "input-relationship": "true",
             "output-description": "\"Delivery, adoption or foster care multiple\"",
             "output-tiene-derecho": "true",
@@ -99,8 +99,8 @@
           },
           {
             "_id": "515afd1f-43cc-44ed-971c-fefb273840b2",
-            "_description": "No case applies",
             "output-case": "\"NONE\"",
+            "_description": "No case applies",
             "input-relationship": "true",
             "output-description": "\"No case applies\"",
             "output-tiene-derecho": "false",
@@ -112,8 +112,8 @@
           },
           {
             "_id": "058dd988-90dd-46da-8478-ee458aacde6f",
-            "_description": "Only father, mother, son, daughter, spouse or partner are accepted",
             "output-case": "\"NONE\"",
+            "_description": "Only father, mother, son, daughter, spouse or partner are accepted",
             "input-relationship": "false",
             "output-description": "\"Not applicable by relationship (first degree)\"",
             "output-tiene-derecho": "false",
@@ -125,8 +125,8 @@
           },
           {
             "_id": "f32bfb0f-801d-4d6c-b5bd-13a1edd0eaca",
-            "_description": "",
             "output-case": "\"NONE\"",
+            "_description": "",
             "input-relationship": "",
             "output-description": "\"UNKNOWN_ERROR\"",
             "output-tiene-derecho": "false",
@@ -228,6 +228,12 @@
             "d62ef8e3-4f8e-423b-b9f5-fbd849686799": "true"
           },
           {
+            "_id": "5eeb88ed-710e-442e-b8bf-241d5cb6aa4f",
+            "_description": "",
+            "7284f076-dcb8-4247-8ee5-f4c0838d2ba5": "\"parent\"",
+            "d62ef8e3-4f8e-423b-b9f5-fbd849686799": "true"
+          },
+          {
             "_id": "c2c2bfdb-fa23-4551-ae1e-0f1f0678cbec",
             "_description": "",
             "7284f076-dcb8-4247-8ee5-f4c0838d2ba5": "\"son\"",
@@ -261,6 +267,12 @@
             "_id": "6b9db3aa-f5fd-460a-8962-83a49d12ecd7",
             "_description": "",
             "7284f076-dcb8-4247-8ee5-f4c0838d2ba5": "\"husband\"",
+            "d62ef8e3-4f8e-423b-b9f5-fbd849686799": "true"
+          },
+          {
+            "_id": "c4f54f22-c0b1-4624-bbba-7fd69e88b39f",
+            "_description": "",
+            "7284f076-dcb8-4247-8ee5-f4c0838d2ba5": "\"foster_parent\"",
             "d62ef8e3-4f8e-423b-b9f5-fbd849686799": "true"
           },
           {

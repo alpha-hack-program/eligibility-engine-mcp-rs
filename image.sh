@@ -194,6 +194,7 @@ run() {
         --env BIND_ADDRESS=0.0.0.0:${PORT} \
         --publish ${PORT}:${PORT} \
         "${IMAGE_TAG}"
+    
 }
 
 # Run the container from remote registry
