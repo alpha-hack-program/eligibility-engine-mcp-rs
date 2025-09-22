@@ -64,15 +64,15 @@ test:
 # Release management with cargo-release
 release-patch: 
 	@echo "🚀 Creating patch release (x.y.Z+1)..."
-	cargo release patch
+	cargo release patch --execute
 
 release-minor: 
 	@echo "🚀 Creating minor release (x.Y+1.0)..."
-	cargo release minor
+	cargo release minor --execute
 
 release-major: 
 	@echo "🚀 Creating major release (X+1.0.0)..."
-	cargo release major
+	cargo release major --execute
 
 release-dry-run: 
 	@echo "🔍 Dry run - showing what would happen..."
