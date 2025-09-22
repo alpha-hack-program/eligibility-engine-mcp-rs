@@ -18,7 +18,28 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
           
+      - name: Install dependencies
+        run: |
+          echo "📦 Installing dependencies..."
+          sudo apt-get update
+          sudo apt-get install -y jq
+          cargo install cargo-release
+          echo "✅ Dependencies installed"
+
+      - name: Test version sync
+        run: |
+          echo "🔄 Testing version sync..."
+          make sync-version
+          echo "✅ Version sync successful"
+
       - name: Run unit tests
         run: |
           echo "🔌 Testing unit tests..."
@@ -79,16 +100,22 @@ jobs:
           echo "✅ manifest.json found"
           
           echo "✅ make pack successful - all required files present"
+
+      - name: Test cargo-release dry-run
+        run: |
+          echo "🚀 Testing cargo-release dry-run..."
+          cargo release patch --dry-run
+          echo "✅ cargo-release dry-run successful"
           
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
         
-      - name: Test image.sh build
+      - name: Test scripts/image.sh build
         run: |
-          echo "🐳 Testing image.sh build..."
+          echo "🐳 Testing scripts/image.sh build..."
           
           # Make script executable
-          chmod +x image.sh
+          chmod +x scripts/image.sh
 
           echo "🐳 Using .env for build test"
           
@@ -108,7 +135,7 @@ jobs:
           echo "🎯 Will use: $CONTAINER_RUNTIME"
           
           # Run the build
-          ./image.sh build
+          scripts/image.sh build
           
           # Check images with the detected runtime first, then fallback to the other
           echo "🔍 Checking for created images..."
@@ -155,7 +182,7 @@ jobs:
             exit 1
           fi
           
-          echo "✅ image.sh build successful"
+          echo "✅ scripts/image.sh build successful"
           
       - name: Upload artifacts
         if: always()

@@ -4,14 +4,6 @@ version = "1.0.6"
 edition = "2024"
 
 [dependencies]
-# rmcp = { git = "https://github.com/modelcontextprotocol/rust-sdk", rev = "05e9a04", features = [
-#     "server",
-#     "transport-sse-server",
-#     "transport-io",
-#     "transport-streamable-http-server",
-#     "auth",
-# ] }
-
 rmcp = { version = "0.5.0", features = [
     "server",
     "transport-sse-server",
@@ -53,6 +45,17 @@ tokio-util = { version = "0.7", features = ["codec"] }
 
 zen-engine = "0.49.1"
 
+[package.metadata.release]
+# Don't publish to crates.io (since this is a binary project)
+publish = false
+# Don't push git tags (you can enable this if you want)
+push = false
+# Run pre-release hook
+pre-release-hook = ["scripts/sync-manifest-version.sh"]
+# Create git tag with 'v' prefix
+tag-name = "v{{version}}"
+# Sign tags (optional)
+sign-tag = false
 
 [[bin]]
 name = "stdio_server"

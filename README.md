@@ -27,6 +27,21 @@ For real legal advice or official information about leave assistance, please con
 - **Robust Input Validation**: Demonstrates JSON schema validation with detailed error handling
 - **Production-Ready Containerization**: Example Docker/Podman setup for deployment
 - **Claude Desktop Integration**: Example DXT packaging for MCP integration
+- **Professional Version Management**: Automated version sync with cargo-release
+- **CI/CD Pipeline**: Comprehensive GitHub Actions workflow
+- **Professional Repository Structure**: Organized scripts and clean project layout
+
+## 📚 Quick Reference
+
+| Task | Command | Description |
+|------|---------|-------------|
+| **🏗️ Build** | `make build-all` | Build all servers |
+| **🧪 Test** | `make test` | Run all tests |
+| **🚀 Release** | `make release-patch` | Create new patch release |
+| **📦 Package** | `make pack` | Create Claude Desktop package |
+| **🐳 Container** | `scripts/image.sh build` | Build container image |
+| **🔄 Sync** | `make sync-version` | Sync versions manually |
+| **ℹ️ Help** | `make help` | Show all commands |
 
 ## 📋 Example Assistance Scenarios (Fictional)
 
@@ -46,6 +61,8 @@ For real legal advice or official information about leave assistance, please con
 
 - Rust 1.70+ ([Install Rust](https://rustup.rs/))
 - Cargo (included with Rust)
+- `jq` for JSON processing ([Install jq](https://jqlang.github.io/jq/download/))
+- `cargo-release` for version management: `cargo install cargo-release`
 
 ### Installation
 
@@ -122,25 +139,28 @@ BIND_ADDRESS=127.0.0.1:8001
 
 ### Build and Run
 
-This requires `podman` or `docker`. Adapt `.env` to your needs.
+This requires `podman` or `docker`. Configuration is managed through `.env` file.
 
 ```bash
 # Build container image
-./image.sh build
+scripts/image.sh build
 
 # Run locally
-./image.sh run
+scripts/image.sh run
 
 # Run from remote registry
-./image.sh push
-./image.sh run-remote
+scripts/image.sh push
+scripts/image.sh run-remote
+
+# Show container information
+scripts/image.sh info
 ```
 
 ### Environment Variables for Containers
 
 ```bash
 # Production configuration
-docker run -p 8001:8001 \
+podman run -p 8001:8001 \
   -e HOST=0.0.0.0 \
   -e PORT=8001 \
   -e RUST_LOG=info \
@@ -171,7 +191,7 @@ make test
 
 ### Manual Testing Examples
 
-Run the server: `make test-sse` or `./image.sh run`.
+Run the server: `make test-sse` or `scripts/image.sh run`.
 
 > This requires NodeJS 19+.
 
@@ -199,41 +219,107 @@ Connect and list tools, select the tool and use this JSON.
 
 ### Available Commands
 
+#### 🏗️ Build Commands
 ```bash
-make help                    # Show help
 make build-all              # Build all servers
-make clean                  # Clean artifacts
-make fmt                    # Format code
-make lint                   # Run clippy
-make audit                  # Security audit
-make dev                    # Development server with auto-reload
+make build-mcp              # Build MCP server (streamable-http)
+make build-sse              # Build SSE server
+make build-stdio            # Build stdio server
+make pack                   # Pack MCP server for Claude Desktop
+```
+
+#### 🚀 Release Commands (cargo-release)
+```bash
+make release-patch          # Create patch release (1.0.6 → 1.0.7)
+make release-minor          # Create minor release (1.0.6 → 1.1.0)
+make release-major          # Create major release (1.0.6 → 2.0.0)
+make release-dry-run        # Show what release-patch would do
+make sync-version           # Manually sync version to all files
+```
+
+#### 🧪 Test Commands
+```bash
+make test                   # Run all tests
+make test-sse               # Test SSE server locally
+make test-mcp               # Test MCP server locally
+```
+
+#### 🔧 Development Commands
+```bash
+make clean                  # Clean build artifacts
+make help                   # Show all available commands
 ```
 
 ### Project Structure
 
 ```
-├── src/
+├── src/                                    # Source code
 │   ├── common/
-│   │   ├── eligibility_engine.rs      # MCP logic and decision engine
+│   │   ├── eligibility_engine.rs         # MCP logic and decision engine
 │   │   └── mod.rs
-│   ├── sse_server.rs           # SSE Server
-│   ├── mcp_server.rs           # MCP HTTP Server
-│   └── stdio_server.rs         # STDIO Server
+│   ├── sse_server.rs                      # SSE Server
+│   ├── mcp_server.rs                      # MCP HTTP Server
+│   └── stdio_server.rs                    # STDIO Server
+├── scripts/                               # Utility scripts
+│   ├── sync-manifest-version.sh           # Version sync for cargo-release
+│   └── image.sh                          # Container management script
 ├── dxt/
-│   └── manifest.json           # Claude Desktop manifest
-├── Containerfile              # Container definition
-├── Makefile                   # Build commands
-└── container.sh               # Container management script
+│   └── manifest.json                      # Claude Desktop manifest
+├── .github/workflows/                     # CI/CD pipelines
+│   └── ci.yml                            # GitHub Actions workflow
+├── docs/                                  # Documentation
+├── .env                                   # Environment variables
+├── Containerfile                          # Container definition
+├── Cargo.toml                            # Rust package manifest
+└── Makefile                              # Build commands
 ```
 
 ### Debug and Monitoring
 
+First run the SSE server (or the Streamable HTTP version with `make test-mcp`):
+
+```bash
+$ make test-sse
+cargo build --release --bin sse_server
+   Compiling eligibility-engine-mcp-server v1.0.6 (/Users/cvicensa/Projects/rust/claude/eligibility-engine-mcp-rs)
+    Finished `release` profile [optimized] target(s) in 18.26s
+🧪 Testing SSE server...
+
+RUST_LOG=debug ./target/release/sse_server
+2025-09-22T16:53:01.931985Z  INFO sse_server: Starting sse Eligibility Engine MCP server on 127.0.0.1:8000
+```
+
+Second, run MCP inspector:
+
+> **NOTE:** NodeJS 19+ has to be installed
+
+```bash
+$ make inspector
+npx @modelcontextprotocol/inspector
+Starting MCP inspector...
+⚙️ Proxy server listening on 127.0.0.1:6277
+🔑 Session token: 6f0fdc22e2a9775a95d60c976b37b873bffec1816002fc702ca8ec7186a7c338
+Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to disable auth
+
+🔗 Open inspector with token pre-filled:
+   http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=6f0fdc22e2a9775a95d60c976b37b873bffec1816002fc702ca8ec7186a7c338
+
+🔍 MCP Inspector is up and running at http://127.0.0.1:6274 🚀
+```
+
+Open a browser and point to the URL with the token included.
+
+Troubleshooting:
+
+MCP error -32602: failed to deserialize parameters: missing field `is_single_parent`
+
+Just click on the checkbox `is_single_parent` and try again.
+
+Additional targets:
+
 ```bash
 # Debug proxy
 make proxy                  # Start mitmproxy on port 8888
-
-# MCP Inspector
-make inspector              # Start MCP Inspector
 
 # Supergateway for SSE
 make sgw-sse               # STDIO -> SSE wrapping
@@ -278,31 +364,114 @@ make sgw-mcp               # STDIO -> MCP HTTP wrapping
 
 ## 🤝 Contributing
 
-1. Fork the project
-2. Create feature branch (`git checkout -b feature/new-feature`)
-3. Commit changes (`git commit -am 'Add new feature'`)
-4. Push to branch (`git push origin feature/new-feature`)
-5. Create Pull Request
+### Development Workflow
+
+1. **Fork the project**
+2. **Create feature branch**: `git checkout -b feature/new-feature`
+3. **Make changes and test**: `make test`
+4. **Commit changes**: `git commit -am 'Add new feature'`
+5. **Push to branch**: `git push origin feature/new-feature`
+6. **Create Pull Request**
+
+### Professional Release Process
+
+1. **Development**: Make changes, test with `make test`
+2. **Version Bump**: Use `make release-patch/minor/major`
+3. **Build**: Use `make pack` for Claude Desktop integration
+4. **Container**: Use `scripts/image.sh build` for containerization
 
 ### Guidelines
 
-- Follow code style with `cargo fmt`
-- Pass linting with `cargo clippy`
-- Add tests for new functionality
-- Update documentation as needed
+- **Code Quality**: Follow `cargo fmt` and pass `cargo clippy`
+- **Testing**: Add tests for new functionality
+- **Version Management**: Let cargo-release handle versioning
+- **CI/CD**: Ensure all GitHub Actions pass
+- **Documentation**: Update README.md as needed
+- **Professional Structure**: Keep scripts in `scripts/` directory
+
+## ⚙️ Version Management
+
+This project uses **cargo-release** for professional version management with automatic synchronization across all configuration files.
+
+### 🔄 Version Sync System
+
+- **Single Source of Truth**: `Cargo.toml` version controls everything
+- **Automatic Sync**: Updates `dxt/manifest.json` and `.env` automatically
+- **Git Integration**: Creates commits and tags automatically
+
+### 📦 Release Workflow
+
+```bash
+# 1. Make your changes and commit them
+git add -A && git commit -m "feat: your changes"
+
+# 2. Create a release (choose appropriate version bump)
+make release-patch     # Bug fixes: 1.0.6 → 1.0.7
+make release-minor     # New features: 1.0.6 → 1.1.0  
+make release-major     # Breaking changes: 1.0.6 → 2.0.0
+
+# 3. Build and package
+make pack
+
+# 4. Push to repository
+git push && git push --tags
+```
+
+### 🔍 Preview Changes
+
+```bash
+# See what would happen without making changes
+make release-dry-run
+```
+
+### 🛠️ Manual Version Sync (Development)
+
+```bash
+# Sync version from Cargo.toml to other files manually
+make sync-version
+```
 
 ## 📄 License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
+## 🚀 Production Deployment
+
+### Environment Configuration
+
+The project uses `.env` for environment management:
+
+```bash
+# Version (automatically managed by cargo-release)
+VERSION=1.0.6
+
+# Container Configuration  
+APP_NAME="eligibility-engine-mcp-rs"
+BASE_IMAGE="registry.access.redhat.com/ubi9/ubi-minimal"
+PORT=8001
+
+# Registry Configuration
+REGISTRY=quay.io/atarazana
+```
+
+### CI/CD Pipeline
+
+The project includes a comprehensive GitHub Actions workflow:
+- ✅ **Automated Testing**: Unit tests and integration tests
+- ✅ **Version Sync Validation**: Tests cargo-release functionality  
+- ✅ **Container Building**: Tests containerization process
+- ✅ **Artifact Management**: Builds and uploads release artifacts
+- ✅ **Cross-platform Support**: Tests on Ubuntu with multiple container runtimes
+
 ## 🙋 Support
 
 - **Issues**: [GitHub Issues](https://github.com/alpha-hack-program/eligibility-engine-mcp-rs/issues)
 - **Documentation**: [Project Wiki](https://github.com/alpha-hack-program/eligibility-engine-mcp-rs/wiki)
+- **CI/CD**: Automated testing and deployment via GitHub Actions
 
 ## 🏷️ Tags
 
-`mcp` `model-context-protocol` `rust` `eligibility-engine` `unpaid-leave` `zen-engine` `claude` `decision-engine`
+`mcp` `model-context-protocol` `rust` `eligibility-engine` `unpaid-leave` `zen-engine` `claude` `decision-engine` `cargo-release` `professional-rust` `containerization` `ci-cd`
 
 ---
 
