@@ -97,8 +97,8 @@ BIND_ADDRESS=127.0.0.1:8001
   "input": {
     "relationship": "mother",
     "situation": "illness",
-    "single_parent_family": false,
-    "number_of_children": 2
+    "is_single_parent": false,
+    "total_children_after": 2
   }
 }
 ```
@@ -191,7 +191,7 @@ Connect and list tools, select the tool and use this JSON.
 {
     "relationship": "son",
     "situation": "birth",
-    "single_parent_family": true
+    "is_single_parent": true
 }
 ```
 
@@ -254,8 +254,8 @@ make sgw-mcp               # STDIO -> MCP HTTP wrapping
 |-------|------|----------|-------------|
 | `relationship` | string | ✅ | Family relationship (father, mother, son, daughter, spouse, partner, husband, wife, woman, man) |
 | `situation` | string | ✅ | Care reason (birth, adoption, foster_care, illness, accident, etc.) |
-| `single_parent_family` | boolean | ✅ | Is it a single-parent family? |
-| `number_of_children` | number | ❌ | Number of children (optional, required for Case B) |
+| `is_single_parent` | boolean | ✅ | Is it a single-parent family? |
+| `total_children_after` | number | ❌ | Number of children (optional, required for Case B) |
 
 ### Response
 

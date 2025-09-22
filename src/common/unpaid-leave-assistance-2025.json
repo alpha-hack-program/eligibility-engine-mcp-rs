@@ -6,7 +6,7 @@
       "name": "request",
       "type": "inputNode",
       "content": {
-        "schema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"title\": \"Unpaid Leave Assistance Evaluation\",\n  \"description\": \"Schema to evaluate different cases of unpaid leave assistance\",\n  \"properties\": {\n    \"input\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"relationship\": {\n          \"type\": \"string\",\n          \"enum\": [\"father\", \"mother\", \"parent\", \"son\", \"daughter\", \"spouse\", \"partner\", \"husband\", \"wife\", \"foster_parent\"],\n          \"description\": \"Family relationship with the person who needs care\"\n        },\n        \"situation\": {\n          \"type\": \"string\",\n          \"enum\": [\"birth\", \"delivery\", \"adoption\", \"foster_care\", \"multiple_birth\", \"multiple_delivery\", \"multiple_adoption\", \"multiple_foster_care\", \"illness\", \"accident\"],\n          \"description\": \"Situation that motivates the need for care\"\n        },\n        \"single_parent_family\": {\n          \"type\": \"boolean\",\n          \"description\": \"Is it a single-parent family or in single-parent situation?\"\n        },\n        \"number_of_children\": {\n          \"type\": \"number\",\n          \"description\": \"Number of children including newborn if applicable\"\n        }\n      },\n      \"required\": [\"relationship\", \"situation\", \"single_parent_family\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"input\"],\n  \"additionalProperties\": false\n}"
+        "schema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"title\": \"Unpaid Leave Assistance Evaluation\",\n  \"description\": \"Schema to evaluate different cases of unpaid leave assistance\",\n  \"properties\": {\n    \"input\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"relationship\": {\n          \"type\": \"string\",\n          \"enum\": [\"father\", \"mother\", \"parent\", \"son\", \"daughter\", \"spouse\", \"partner\", \"husband\", \"wife\", \"foster_parent\"],\n          \"description\": \"Family relationship with the person who needs care\"\n        },\n        \"situation\": {\n          \"type\": \"string\",\n          \"enum\": [\"birth\", \"delivery\", \"adoption\", \"foster_care\", \"multiple_birth\", \"multiple_delivery\", \"multiple_adoption\", \"multiple_foster_care\", \"illness\", \"accident\"],\n          \"description\": \"Situation that motivates the need for care\"\n        },\n        \"is_single_parent\": {\n          \"type\": \"boolean\",\n          \"description\": \"Is it a single-parent family or in single-parent situation?\"\n        },\n        \"total_children_after\": {\n          \"type\": \"number\",\n          \"description\": \"Number of children including newborn if applicable\"\n        }\n      },\n      \"required\": [\"relationship\", \"situation\", \"is_single_parent\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"input\"],\n  \"additionalProperties\": false\n}"
       },
       "position": {
         "x": -40,
@@ -151,12 +151,12 @@
           {
             "id": "4552d3df-4d61-49e3-b6a7-26da04910cda",
             "name": "Single-parent family",
-            "field": "input.single_parent_family"
+            "field": "input.is_single_parent"
           },
           {
             "id": "f3560ff1-a5b9-4eb2-8c45-b82f6e65646b",
             "name": "Number of children",
-            "field": "input.number_of_children"
+            "field": "input.total_children_after"
           }
         ],
         "outputs": [
