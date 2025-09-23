@@ -10,6 +10,8 @@ An example Model Context Protocol (MCP) server developed in Rust that demonstrat
 
 ## ⚠️ **DISCLAIMER**
 
+This example is based on fictional regulations from the imaginary Republic of Lysmark. For full details on the fictional legal framework, benefit scenarios, and eligibility rules used in this demonstration, please refer to the documents provided in the [`documents/`](./documents/) folder.
+
 **This is a demonstration/example project only.** The regulations, amounts, and evaluation logic implemented here are fictional and created solely for educational and demonstration purposes. This software:
 
 - **Should NOT be used for actual legal or administrative decisions**
@@ -99,37 +101,56 @@ RUST_LOG=debug ./target/release/sse_server
 
 ```bash
 # Server configuration
-HOST=127.0.0.1          # Bind address (0.0.0.0 for containers)
-PORT=8001               # Server port
 RUST_LOG=info           # Logging level (debug, info, warn, error)
 
 # Or use BIND_ADDRESS directly
-BIND_ADDRESS=127.0.0.1:8001
+BIND_ADDRESS=127.0.0.1:8000
 ```
 
 ### Example Usage
 
+This input represents a request to the eligibility engine to determine if a person is eligible for unpaid leave benefits under Lysmark law, based on this query.
+
+> "My wife just delivered our third baby and I'd like to know if I can request the unpaid leave aid."
+
 ```json
 {
-  "input": {
-    "relationship": "mother",
-    "situation": "illness",
-    "is_single_parent": false,
-    "total_children_after": 2
-  }
+  `situation`: `birth`,
+  `relationship`: `father`,
+  `is_single_parent`: false,
+  `total_children_after`: 3
 }
 ```
+
+**Applicant Profile:**
+A father requesting leave for the birth of a child
+Not a single parent (two-parent household)
+Will have 2 children total after the birth
+
+**Case Classification:**
+Identified as "Case B: Third child or more with newborn"
+Potentially eligible for a monthly benefit of 725€ if requirements are met
+
 
 **Example Response:**
 ```json
 {
   "output": {
-    "case": "A",
-    "description": "Care for first-degree relative (illness or accident)",
-    "monthly_benefit": 725,
+    "description": "Third child or more with newborn",
+    "monthly_benefit": 500,
+    "additional_requirements": "The number of children must be 3 or more, the ages of at least 2 of the minors must be less than 6, if there is disability greater than 33% then the limit is 9 years",
+    "case": "B",
     "potentially_eligible": true,
-    "additional_requirements": "The person must have been hospitalized..."
-  }
+    "errores": [],
+    "warnings": []
+  },
+  "input": {
+    "relationship": "father",
+    "situation": "birth",
+    "is_single_parent": false,
+    "total_children_after": 3.0
+  },
+  "relationship_valid": true
 }
 ```
 
@@ -161,8 +182,7 @@ scripts/image.sh info
 ```bash
 # Production configuration
 podman run -p 8001:8001 \
-  -e HOST=0.0.0.0 \
-  -e PORT=8001 \
+  -e BIND_ADDRESS=0.0.0.0:8001 \
   -e RUST_LOG=info \
   quay.io/atarazana/eligibility-engine-mcp-server:latest
 ```
@@ -173,7 +193,15 @@ podman run -p 8001:8001 \
 
 ```bash
 # Create DXT package for Claude Desktop
-make pack
+$ make pack
+cargo build --release --bin stdio_server
+   Compiling eligibility-engine-mcp-server v1.0.8 (/Users/.../eligibility-engine-mcp-rs)
+    Finished `release` profile [optimized] target(s) in 18.23s
+Packing MCP server for Claude Desktop...
+chmod +x ./target/release/stdio_server
+zip -rX eligibility-engine-mcp-server.dxt -j dxt/manifest.json ./target/release/stdio_server
+updating: manifest.json (deflated 49%)
+updating: stdio_server (deflated 63%)
 ```
 
 ### Example Claude Configuration
@@ -182,6 +210,9 @@ Drag and drop the `DXT` file into the `Settings->Extensions` dropping area.
 
 > **Note**: This demonstrates MCP integration patterns and is not intended for production use with real data.
 
+
+
+
 ## 🧪 Testing
 
 ```bash
@@ -189,31 +220,7 @@ Drag and drop the `DXT` file into the `Settings->Extensions` dropping area.
 make test
 ```
 
-### Manual Testing Examples
 
-Run the server: `make test-sse` or `scripts/image.sh run`.
-
-> This requires NodeJS 19+.
-
-In another terminal.
-
-```bash
-make inspector
-```
-
-Then connect your browser to the suggest url given by the MCP inspector. Once there connect to `http://localhost:${PORT}/sse`
-
-> `PORT` is set in `.env`
-
-Connect and list tools, select the tool and use this JSON.
-
-```json
-{
-    "relationship": "son",
-    "situation": "birth",
-    "is_single_parent": true
-}
-```
 
 ## 🛠️ Development
 

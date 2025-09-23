@@ -7,7 +7,8 @@ use tracing_subscriber::{
     {self},
 };
 mod common;
-use common::eligibility_engine::EligibilityEngine;
+use common::{eligibility_engine::EligibilityEngine, metrics};
+use axum::{response::IntoResponse, http::StatusCode};
 
 const BIND_ADDRESS: &str = "127.0.0.1:8001";
 
@@ -30,10 +31,18 @@ async fn main() -> anyhow::Result<()> {
         Default::default(),
     );
 
-    let router = axum::Router::new().nest_service("/mcp", service);
+    let router = axum::Router::new()
+        .nest_service("/mcp", service)
+        .route("/metrics", axum::routing::get(metrics_handler));
     let tcp_listener = tokio::net::TcpListener::bind(bind_address).await?;
     let _ = axum::serve(tcp_listener, router)
         .with_graceful_shutdown(async { tokio::signal::ctrl_c().await.unwrap() })
         .await;
     Ok(())
+}
+
+/// Handler for the /metrics endpoint
+async fn metrics_handler() -> impl IntoResponse {
+    let output = metrics::METRICS.gather();
+    (StatusCode::OK, output)
 }

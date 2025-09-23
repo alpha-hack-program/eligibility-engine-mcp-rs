@@ -5,7 +5,8 @@ use tracing_subscriber::{
     {self},
 };
 mod common;
-use common::eligibility_engine::EligibilityEngine;
+use common::{eligibility_engine::EligibilityEngine, metrics};
+use axum::{response::IntoResponse, http::StatusCode};
 
 const BIND_ADDRESS: &str = "127.0.0.1:8000";
 
@@ -30,9 +31,10 @@ async fn main() -> anyhow::Result<()> {
         sse_keep_alive: None,
     };
 
-    let (sse_server, router) = SseServer::new(config);
+    let (sse_server, mut router) = SseServer::new(config);
 
-    // Do something with the router, e.g., add routes or middleware
+    // Add metrics endpoint
+    router = router.route("/metrics", axum::routing::get(metrics_handler));
 
     let listener = tokio::net::TcpListener::bind(sse_server.config.bind).await?;
 
@@ -54,4 +56,10 @@ async fn main() -> anyhow::Result<()> {
     tokio::signal::ctrl_c().await?;
     ct.cancel();
     Ok(())
+}
+
+/// Handler for the /metrics endpoint
+async fn metrics_handler() -> impl IntoResponse {
+    let output = metrics::METRICS.gather();
+    (StatusCode::OK, output)
 }

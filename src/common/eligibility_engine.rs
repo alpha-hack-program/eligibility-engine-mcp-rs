@@ -4,6 +4,8 @@ use zen_engine::model::DecisionContent;
 use zen_engine::{EvaluationError, NodeError};
 use std::fmt;
 
+use super::metrics::{increment_requests, increment_errors, RequestTimer};
+
 use rmcp::{
     ServerHandler,
     handler::server::{router::tool::ToolRouter, tool::Parameters},
@@ -454,6 +456,9 @@ impl EligibilityEngine {
         &self, 
         Parameters(direct_params): Parameters<UnpaidLeaveDirectParams>
     ) -> Result<CallToolResult, McpError> {
+        // Initialize metrics tracking
+        let _timer = RequestTimer::new();
+        increment_requests();
         // Convert direct parameters to nested structure expected by the engine
         let request = UnpaidLeaveRequest {
             input: UnpaidLeaveInput {
@@ -481,12 +486,16 @@ impl EligibilityEngine {
                         // Serialize the response to JSON and return as success
                         match serde_json::to_string_pretty(&response) {
                             Ok(json_str) => Ok(CallToolResult::success(vec![Content::text(json_str)])),
-                            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-                                "Error serializing response: {}", e
-                            ))]))
+                            Err(e) => {
+                                increment_errors();
+                                Ok(CallToolResult::error(vec![Content::text(format!(
+                                    "Error serializing response: {}", e
+                                ))]))
+                            }
                         }
                     },
                     Err(e) => {
+                        increment_errors();
                         let error_msg = match e {
                             UnpaidLeaveError::ValidationError(validation_errors) => {
                                 let mut msg = "Validation errors:\n".to_string();
@@ -502,6 +511,7 @@ impl EligibilityEngine {
                 }
             },
             Err(join_error) => {
+                increment_errors();
                 Ok(CallToolResult::error(vec![Content::text(format!(
                     "Internal error: {}", join_error
                 ))]))

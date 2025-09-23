@@ -45,6 +45,9 @@ tokio-util = { version = "0.7", features = ["codec"] }
 
 zen-engine = "0.49.1"
 
+prometheus = "0.13"
+once_cell = "1.19"
+
 [package.metadata.release]
 # Don't publish to crates.io (since this is a binary project)
 publish = false
