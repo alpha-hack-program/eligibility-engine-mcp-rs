@@ -4,6 +4,7 @@ use prometheus::{Counter, Gauge, Histogram, HistogramOpts, Opts, Registry};
 pub static METRICS: Lazy<EligibilityMetrics> = Lazy::new(|| EligibilityMetrics::new());
 
 pub struct EligibilityMetrics {
+    #[allow(dead_code)] // Used internally by gather() method
     pub registry: Registry,
     pub requests_total: Counter,
     pub errors_total: Counter,
@@ -58,6 +59,7 @@ impl EligibilityMetrics {
         }
     }
 
+    #[allow(dead_code)] // Used by HTTP metrics endpoints
     pub fn gather(&self) -> String {
         use prometheus::{Encoder, TextEncoder};
         let encoder = TextEncoder::new();

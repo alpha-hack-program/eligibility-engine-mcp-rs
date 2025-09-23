@@ -419,6 +419,8 @@ make release-major     # Breaking changes: 1.0.6 → 2.0.0
 
 # 3. Build and package
 make pack
+scripts/image.sh build
+scripts/image.sh push
 
 # 4. Push to repository
 git push && git push --tags
