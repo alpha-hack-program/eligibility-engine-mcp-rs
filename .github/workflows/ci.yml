@@ -183,7 +183,7 @@ jobs:
           fi
           
           echo "✅ scripts/image.sh build successful"
-          
+
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -195,3 +195,95 @@ jobs:
             target/release/sse_server
             target/release/mcp_server
           retention-days: 7
+
+  # Production container build and push job  
+  build-and-push:
+    name: Build and Push Production Container
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ./artifacts/
+
+      - name: Setup Docker Buildx with cache
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
+
+      # - name: Create production .env file
+      #   run: |
+      #     cat > .env << EOF
+      #     # Production Container Registry Configuration
+      #     REGISTRY=${{ secrets.CONTAINER_REGISTRY }}
+          
+      #     # Application details (production build)
+      #     APP_NAME=eligibility-engine-mcp-server
+      #     MAINTAINER="Alpha Hack Group <alpha@github.com>"
+      #     DESCRIPTION="Eligibility Engine MCP Server - Model Context Protocol server for eligibility evaluation"
+      #     VERSION=${GITHUB_SHA::8}
+      #     PORT=8001
+      #     SOURCE=https://github.com/alpha-hack-program/eligibility-engine-mcp-rs.git
+          
+      #     # Base image configuration
+      #     BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
+      #     BASE_TAG=9.6
+          
+      #     # Production optimizations
+      #     CACHE_FLAG=
+      #     EOF
+          
+      #     echo "📋 Production .env created:"
+      #     cat .env
+
+      - name: Setup Rust toolchain (for minimal rebuild)
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Login to Container Registry
+        run: |
+          source .env
+          # Determine registry type and login
+          if [[ "${REGISTRY}" == *"quay.io"* ]]; then
+            echo "Logging in to Quay.io..."
+            echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login quay.io -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+          elif [[ "${REGISTRY}" == *"docker.io"* ]]; then
+            echo "Logging in to Docker Hub..."
+            echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login docker.io -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+          else
+            echo "Logging in to custom registry..."
+            echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login "${REGISTRY}" -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+          fi
+
+      - name: Build production container image
+        run: |
+          echo "🐳 Building production container image..."
+          chmod +x scripts/image.sh
+          
+          # Use Docker buildkit for better caching
+          export DOCKER_BUILDKIT=1
+          export BUILDKIT_PROGRESS=plain
+          
+          scripts/image.sh build
+
+      - name: Push container image to registry
+        run: |
+          echo "🚀 Pushing production container image..."
+          scripts/image.sh push
+
+      - name: Show container image info
+        run: |
+          echo "📋 Production container image information:"
+          scripts/image.sh info
