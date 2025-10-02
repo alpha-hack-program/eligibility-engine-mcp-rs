@@ -27,13 +27,13 @@ pack: build-stdio
 test-sse: build-sse
 	@echo "🧪 Testing SSE server..."
 	@echo ""
-	RUST_LOG=debug ./target/release/sse_server
+	RUST_LOG=debug BIND_ADDRESS=0.0.0.0:8001 ./target/release/sse_server
 
 # Test MCP server locally
 test-mcp: build-mcp
 	@echo "🧪 Testing MCP server..."
 	@echo ""
-	RUST_LOG=debug ./target/release/mcp_server
+	RUST_LOG=debug BIND_ADDRESS=0.0.0.0:8001 ./target/release/mcp_server
 	
 clean:
 	rm -f *.dxt *.zip
