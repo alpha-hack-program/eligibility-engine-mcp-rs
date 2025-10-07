@@ -494,6 +494,11 @@ impl EligibilityEngine {
 #[tool_handler]
 impl ServerHandler for EligibilityEngine {
     fn get_info(&self) -> ServerInfo {
+        // Read basic information from .env file (replaced by sync script during release)
+        let name = std::env::var("APP_NAME").unwrap_or_else(|_| "eligibility-engine-mcp-rs".to_string());
+        let version = std::env::var("VERSION").unwrap_or_else(|_| "1.0.0".to_string());
+        let title = std::env::var("TITLE").unwrap_or_else(|_| "Eligibility Engine".to_string());
+
         ServerInfo {
             instructions: Some(
                 "Eligibility Engine for leave assistance according to legal regulations. \
@@ -519,9 +524,9 @@ impl ServerHandler for EligibilityEngine {
             ),
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: rmcp::model::Implementation {
-                name:"eligibility-engine".to_string(),
-                version:"1.0.0".to_string(), 
-                title: None, 
+                name: name,
+                version: version, 
+                title: Some(title), 
                 icons: None, 
                 website_url: None 
             },

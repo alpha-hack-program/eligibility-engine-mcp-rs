@@ -2,10 +2,11 @@
 
 # Pre-release hook for cargo-release
 # Syncs the version from Cargo.toml to dxt/manifest.json and .env
+# Also updates Rust source code with .env values
 
 set -e  # Exit on any error
 
-echo "🔄 Syncing version from Cargo.toml to dxt/manifest.json and .env..."
+echo "🔄 Syncing version from Cargo.toml to dxt/manifest.json, .env, and Rust source..."
 
 # Get version from Cargo.toml using cargo metadata
 if command -v jq &> /dev/null; then
@@ -57,9 +58,69 @@ if [ -f ".env" ]; then
         echo "✅ Added VERSION=$VERSION to .env"
     fi
 else
-    # Create new .env file
-    echo "VERSION=$VERSION" > .env
-    echo "✅ Created .env with VERSION=$VERSION"
+    # Create new .env file with defaults
+    cat > .env << EOF
+APP_NAME=eligibility-engine-mcp-rs
+VERSION=$VERSION
+TITLE=Eligibility Engine MCP Server
+EOF
+    echo "✅ Created .env with default values"
+fi
+
+# Read values from .env file for Rust source replacement
+echo "🔧 Reading .env values for Rust source code replacement..."
+
+# Function to read .env variables
+read_env_var() {
+    local var_name=$1
+    local default_value=$2
+    local value
+    
+    if [ -f ".env" ]; then
+        value=$(grep "^${var_name}=" .env | cut -d'=' -f2- | sed 's/^"//' | sed 's/"$//')
+    fi
+    
+    if [ -z "$value" ]; then
+        value=$default_value
+    fi
+    
+    echo "$value"
+}
+
+# Get values from .env
+APP_NAME=$(read_env_var "APP_NAME" "eligibility-engine-mcp-rs")
+ENV_VERSION=$(read_env_var "VERSION" "$VERSION")  # Use VERSION from Cargo.toml as fallback
+TITLE=$(read_env_var "TITLE" "Eligibility Engine")
+
+echo "📋 .env values:"
+echo "   APP_NAME: $APP_NAME"
+echo "   VERSION: $ENV_VERSION" 
+echo "   TITLE: $TITLE"
+
+# Update Rust source code
+RUST_FILE="src/common/eligibility_engine.rs"
+if [ -f "$RUST_FILE" ]; then
+    echo "🦀 Updating Rust source code with .env values..."
+    
+    # Create a backup
+    cp "$RUST_FILE" "$RUST_FILE.bak"
+    
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS sed syntax
+        sed -i '' "s/std::env::var(\"APP_NAME\")\.unwrap_or_else(|_| \"[^\"]*\"\.to_string())/\"$APP_NAME\".to_string()/g" "$RUST_FILE"
+        sed -i '' "s/std::env::var(\"VERSION\")\.unwrap_or_else(|_| \"[^\"]*\"\.to_string())/\"$ENV_VERSION\".to_string()/g" "$RUST_FILE"
+        sed -i '' "s/std::env::var(\"TITLE\")\.unwrap_or_else(|_| \"[^\"]*\"\.to_string())/\"$TITLE\".to_string()/g" "$RUST_FILE"
+    else
+        # Linux sed syntax
+        sed -i "s/std::env::var(\"APP_NAME\")\.unwrap_or_else(|_| \"[^\"]*\"\.to_string())/\"$APP_NAME\".to_string()/g" "$RUST_FILE"
+        sed -i "s/std::env::var(\"VERSION\")\.unwrap_or_else(|_| \"[^\"]*\"\.to_string())/\"$ENV_VERSION\".to_string()/g" "$RUST_FILE"
+        sed -i "s/std::env::var(\"TITLE\")\.unwrap_or_else(|_| \"[^\"]*\"\.to_string())/\"$TITLE\".to_string()/g" "$RUST_FILE"
+    fi
+    
+    echo "✅ Updated $RUST_FILE with .env values"
+    echo "💾 Backup saved as $RUST_FILE.bak"
+else
+    echo "⚠️  $RUST_FILE not found - skipping Rust source update"
 fi
 
 echo "🎉 Version sync complete!"
