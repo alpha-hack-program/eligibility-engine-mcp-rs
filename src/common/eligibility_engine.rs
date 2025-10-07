@@ -495,9 +495,9 @@ impl EligibilityEngine {
 impl ServerHandler for EligibilityEngine {
     fn get_info(&self) -> ServerInfo {
         // Read basic information from .env file (replaced by sync script during release)
-        let name = std::env::var("APP_NAME").unwrap_or_else(|_| "eligibility-engine-mcp-rs".to_string());
-        let version = std::env::var("VERSION").unwrap_or_else(|_| "1.0.0".to_string());
-        let title = std::env::var("TITLE").unwrap_or_else(|_| "Eligibility Engine".to_string());
+        let name = "eligibility-engine-mcp-rs".to_string();
+        let version = "1.1.3".to_string();
+        let title = "Eligibility Engine MCP Server".to_string();
 
         ServerInfo {
             instructions: Some(
