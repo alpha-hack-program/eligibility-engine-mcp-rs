@@ -6,7 +6,7 @@
       "name": "request",
       "type": "inputNode",
       "content": {
-        "schema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"title\": \"Unpaid Leave Assistance Evaluation\",\n  \"description\": \"Schema to evaluate different cases of unpaid leave assistance\",\n  \"properties\": {\n    \"input\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"relationship\": {\n          \"type\": \"string\",\n          \"enum\": [\"father\", \"mother\", \"parent\", \"son\", \"daughter\", \"spouse\", \"partner\", \"husband\", \"wife\", \"foster_parent\"],\n          \"description\": \"Family relationship with the person who needs care\"\n        },\n        \"situation\": {\n          \"type\": \"string\",\n          \"enum\": [\"birth\", \"delivery\", \"adoption\", \"foster_care\", \"multiple_birth\", \"multiple_delivery\", \"multiple_adoption\", \"multiple_foster_care\", \"illness\", \"accident\"],\n          \"description\": \"Situation that motivates the need for care\"\n        },\n        \"is_single_parent\": {\n          \"type\": \"boolean\",\n          \"description\": \"Is it a single-parent family or in single-parent situation?\"\n        },\n        \"total_children_after\": {\n          \"type\": \"number\",\n          \"description\": \"Number of children including newborn if applicable\"\n        }\n      },\n      \"required\": [\"relationship\", \"situation\", \"is_single_parent\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"input\"],\n  \"additionalProperties\": false\n}"
+        "schema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"title\": \"Unpaid Leave Assistance Evaluation\",\n  \"description\": \"Schema to evaluate different cases of unpaid leave assistance\",\n  \"properties\": {\n    \"input\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"relationship\": {\n          \"type\": \"string\",\n          \"description\": \"Family relationship with the person who needs care\"\n        },\n        \"situation\": {\n          \"type\": \"string\",\n          \"enum\": [\"birth\", \"delivery\", \"adoption\", \"foster_care\", \"multiple_birth\", \"multiple_delivery\", \"multiple_adoption\", \"multiple_foster_care\", \"illness\", \"accident\"],\n          \"description\": \"Situation that motivates the need for care\"\n        },\n        \"is_single_parent\": {\n          \"type\": \"boolean\",\n          \"description\": \"Is it a single-parent family or in single-parent situation?\"\n        },\n        \"total_children_after\": {\n          \"type\": \"number\",\n          \"description\": \"Number of children including newborn if applicable\"\n        }\n      },\n      \"required\": [\"relationship\", \"situation\", \"is_single_parent\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"input\"],\n  \"additionalProperties\": false\n}"
       },
       "position": {
         "x": -40,
@@ -182,30 +182,18 @@
           },
           {
             "id": "06347639-63c0-41bc-b2a0-09cea0cb669c",
-            "name": "Output",
+            "name": "Additional Requirements",
             "field": "output.additional_requirements"
           }
         ],
         "hitPolicy": "first",
         "inputField": null,
         "outputPath": null,
-        "passThrough": true,
+        "passThrough": false,
         "executionMode": "single"
       },
       "position": {
         "x": 525,
-        "y": 295
-      }
-    },
-    {
-      "id": "output-node-001",
-      "name": "result",
-      "type": "outputNode",
-      "content": {
-        "schema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"title\": \"Output Unpaid Leave Assistance\",\n  \"description\": \"Result of the evaluation of the cases of assistance\",\n  \"properties\": {\n    \"output\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\",\n          \"description\": \"Description of the applicable case\"\n        },\n        \"monthly_benefit\": {\n          \"type\": \"integer\",\n          \"description\": \"Monthly benefit amount in euros\"\n        },\n        \"additional_requirements\": {\n          \"type\": \"string\",\n          \"description\": \"Detailed description of additional requirements that must be met\"\n        },\n        \"case\": {\n          \"type\": \"string\",\n          \"description\": \"Letter of the applicable case according to regulations (A, B, C, D, E) or empty if not eligible\"\n        },\n        \"potentially_eligible\": {\n          \"type\": \"boolean\",\n          \"description\": \"Does it meet the intrinsic requirements to potentially be entitled to the benefit?\"\n        },\n        \"errores\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          },\n          \"description\": \"List of errors or unmet requirements\"\n        },\n        \"warnings\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          },\n          \"description\": \"List of warnings or additional relevant information\"\n        }\n      },\n      \"required\": [\"description\", \"monthly_benefit\", \"case\", \"potentially_eligible\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"output\"],\n  \"additionalProperties\": true\n}"
-      },
-      "position": {
-        "x": 810,
         "y": 295
       }
     },
@@ -306,15 +294,21 @@
         "x": 250,
         "y": 295
       }
+    },
+    {
+      "id": "7d5b2e39-d9e4-4f22-8313-1f195a02bff2",
+      "name": "response",
+      "type": "outputNode",
+      "content": {
+        "schema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"title\": \"Output Unpaid Leave Assistance\",\n  \"description\": \"Result of the evaluation of the cases of assistance\",\n  \"properties\": {\n    \"output\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\",\n          \"description\": \"Description of the applicable case\"\n        },\n        \"monthly_benefit\": {\n          \"type\": \"integer\",\n          \"description\": \"Monthly benefit amount in euros\"\n        },\n        \"additional_requirements\": {\n          \"type\": \"string\",\n          \"description\": \"Detailed description of additional requirements that must be met\"\n        },\n        \"case\": {\n          \"type\": \"string\",\n          \"description\": \"Letter of the applicable case according to regulations (A, B, C, D, E) or empty if not eligible\"\n        },\n        \"potentially_eligible\": {\n          \"type\": \"boolean\",\n          \"description\": \"Does it meet the intrinsic requirements to potentially be entitled to the benefit?\"\n        },\n        \"errores\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          },\n          \"description\": \"List of errors or unmet requirements\"\n        },\n        \"warnings\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          },\n          \"description\": \"List of warnings or additional relevant information\"\n        }\n      },\n      \"required\": [\"description\", \"monthly_benefit\", \"case\", \"potentially_eligible\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"output\"],\n  \"additionalProperties\": false\n}"
+      },
+      "position": {
+        "x": 855,
+        "y": 295
+      }
     }
   ],
   "edges": [
-    {
-      "id": "edge-002",
-      "type": "edge",
-      "sourceId": "decision-table-001",
-      "targetId": "output-node-001"
-    },
     {
       "id": "b705448a-d132-4156-a609-063663b31c98",
       "type": "edge",
@@ -326,6 +320,12 @@
       "type": "edge",
       "sourceId": "c4fbb492-b7d2-4123-b36b-2f6804d53700",
       "targetId": "decision-table-001"
+    },
+    {
+      "id": "f2e22ef4-70fd-4391-912c-98f8477b4e75",
+      "type": "edge",
+      "sourceId": "decision-table-001",
+      "targetId": "7d5b2e39-d9e4-4f22-8313-1f195a02bff2"
     }
   ]
 }
