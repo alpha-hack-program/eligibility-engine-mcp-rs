@@ -8,7 +8,7 @@ use super::metrics::{increment_requests, increment_errors, RequestTimer};
 
 use rmcp::{
     ServerHandler,
-    handler::server::{router::tool::ToolRouter, tool::Parameters},
+    handler::server::{router::tool::ToolRouter, wrapper::Parameters},
     model::{ServerCapabilities, ServerInfo, CallToolResult, Content},
     ErrorData as McpError,
     schemars, tool, tool_handler, tool_router,
@@ -236,20 +236,6 @@ pub struct UnpaidLeaveRequest {
     pub input: UnpaidLeaveInput,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct UnpaidLeaveOutput {
-    description: String,
-    monthly_benefit: i32,
-    #[serde(default)]
-    additional_requirements: String,
-    case: String,
-    potentially_eligible: bool,
-    #[serde(default)]
-    errores: Vec<String>,
-    #[serde(default)]
-    warnings: Vec<String>,
-}
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, schemars::JsonSchema)]
 pub struct UnpaidLeaveResponse {
     #[schemars(description = "Evaluation result")]
@@ -311,24 +297,9 @@ impl UnpaidLeaveDecisionEngine {
         
         match decision.evaluate(json_value.into()).await {
             Ok(result) => {
-                // Convert result from Variable to Value and then deserialize
+                // Convert result from Variable to Value and then deserialize directly
                 let result_value: serde_json::Value = result.result.into();
-                let mut response: UnpaidLeaveResponse = serde_json::from_value(result_value)?;
-                
-                // Convert UnpaidLeaveOutput to UnpaidLeaveOutputForSchema
-                let internal_output: UnpaidLeaveOutput = serde_json::from_value(
-                    serde_json::to_value(&response.output)?
-                )?;
-                
-                response.output = UnpaidLeaveOutputForSchema {
-                    description: internal_output.description,
-                    monthly_benefit: internal_output.monthly_benefit,
-                    additional_requirements: internal_output.additional_requirements,
-                    case: internal_output.case,
-                    potentially_eligible: internal_output.potentially_eligible,
-                    errores: internal_output.errores,
-                    warnings: internal_output.warnings,
-                };
+                let response: UnpaidLeaveResponse = serde_json::from_value(result_value)?;
                 
                 Ok(response)
             },
@@ -548,8 +519,11 @@ impl ServerHandler for EligibilityEngine {
             ),
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: rmcp::model::Implementation {
-                name: "eligibility-engine".to_string(),
-                version: "1.0.0".to_string(),
+                name:"eligibility-engine".to_string(),
+                version:"1.0.0".to_string(), 
+                title: None, 
+                icons: None, 
+                website_url: None 
             },
             ..Default::default()
         }
@@ -575,14 +549,15 @@ mod tests {
             Ok(call_result) => {
                 // Check if it's a success result
                 println!("Resultado Supuesto A: {:?}", call_result);
-                let content = call_result.content.unwrap();
+                let content = call_result.content;
+                assert!(!content.is_empty(), "Content should not be empty");
                 let raw_content = &content[0].raw;
                 // Extract the text from the raw content, it has to be a string
                 let json_text = &raw_content.as_text().unwrap().text;
                 let response: UnpaidLeaveResponse = serde_json::from_str(json_text).unwrap();
-                assert!(response.output.case == "A");
-                assert!(response.output.potentially_eligible == true);
-                assert!(response.output.monthly_benefit == 725);
+                assert_eq!(response.output.case, "A");
+                assert!(response.output.potentially_eligible);
+                assert_eq!(response.output.monthly_benefit, 725);
                 
             },
             Err(e) => panic!("Error inesperado: {}", e),
