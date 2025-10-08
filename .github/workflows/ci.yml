@@ -106,83 +106,6 @@ jobs:
           echo "🚀 Testing cargo-release dry-run..."
           cargo release patch --dry-run || echo "⚠️ cargo-release dry-run completed (may warn about no changes)"
           echo "✅ cargo-release dry-run test completed"
-          
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        
-      - name: Test scripts/image.sh build
-        run: |
-          echo "🐳 Testing scripts/image.sh build..."
-          
-          # Make script executable
-          chmod +x scripts/image.sh
-
-          echo "🐳 Using .env for build test"
-          
-          # Check what container runtime is available (podman takes precedence)
-          echo "🔍 Checking available container runtimes..."
-          CONTAINER_RUNTIME=""
-          if command -v podman &> /dev/null; then
-            echo "✅ Podman available: $(podman --version)"
-            CONTAINER_RUNTIME="podman"
-          elif command -v docker &> /dev/null; then
-            echo "✅ Docker available: $(docker --version)"
-            CONTAINER_RUNTIME="docker"
-          else
-            echo "❌ Neither Podman nor Docker found"
-            exit 1
-          fi
-          echo "🎯 Will use: $CONTAINER_RUNTIME"
-          
-          # Run the build
-          scripts/image.sh build
-          
-          # Check images with the detected runtime first, then fallback to the other
-          echo "🔍 Checking for created images..."
-          
-          FOUND=false
-          
-          # Check with primary runtime
-          echo "Checking with $CONTAINER_RUNTIME:"
-          $CONTAINER_RUNTIME images || echo "$CONTAINER_RUNTIME images command failed"
-          
-          if $CONTAINER_RUNTIME images --format "table {{.Repository}}:{{.Tag}}" 2>/dev/null | grep -q "eligibility-engine-mcp"; then
-            echo "✅ Found image with $CONTAINER_RUNTIME"
-            FOUND=true
-          fi
-          
-          # If not found and using podman, also check docker
-          if [ "$FOUND" = false ] && [ "$CONTAINER_RUNTIME" = "podman" ] && command -v docker &> /dev/null; then
-            echo "Checking with Docker as fallback:"
-            docker images || echo "Docker images command failed"
-            
-            if docker images --format "table {{.Repository}}:{{.Tag}}" 2>/dev/null | grep -q "eligibility-engine-mcp"; then
-              echo "✅ Found image with Docker"
-              FOUND=true
-            fi
-          fi
-          
-          # If not found and using docker, also check podman
-          if [ "$FOUND" = false ] && [ "$CONTAINER_RUNTIME" = "docker" ] && command -v podman &> /dev/null; then
-            echo "Checking with Podman as fallback:"
-            podman images || echo "Podman images command failed"
-            
-            if podman images --format "table {{.Repository}}:{{.Tag}}" 2>/dev/null | grep -q "eligibility-engine-mcp"; then
-              echo "✅ Found image with Podman"
-              FOUND=true
-            fi
-          fi
-          
-          if [ "$FOUND" = false ]; then
-            echo "❌ Container image not found with any runtime"
-            echo "Podman images:"
-            podman images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}" 2>/dev/null || echo "Podman not available"
-            echo "Docker images:"
-            docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}" 2>/dev/null || echo "Docker not available"
-            exit 1
-          fi
-          
-          echo "✅ scripts/image.sh build successful"
 
       - name: Upload artifacts
         if: always()
@@ -219,31 +142,6 @@ jobs:
           driver-opts: |
             image=moby/buildkit:latest
             network=host
-
-      # - name: Create production .env file
-      #   run: |
-      #     cat > .env << EOF
-      #     # Production Container Registry Configuration
-      #     REGISTRY=${{ secrets.CONTAINER_REGISTRY }}
-          
-      #     # Application details (production build)
-      #     APP_NAME=eligibility-engine-mcp-server
-      #     MAINTAINER="Alpha Hack Group <alpha@github.com>"
-      #     DESCRIPTION="Eligibility Engine MCP Server - Model Context Protocol server for eligibility evaluation"
-      #     VERSION=${GITHUB_SHA::8}
-      #     PORT=8001
-      #     SOURCE=https://github.com/alpha-hack-program/eligibility-engine-mcp-rs.git
-          
-      #     # Base image configuration
-      #     BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
-      #     BASE_TAG=9.6
-          
-      #     # Production optimizations
-      #     CACHE_FLAG=
-      #     EOF
-          
-      #     echo "📋 Production .env created:"
-      #     cat .env
 
       - name: Setup Rust toolchain (for minimal rebuild)
         uses: actions-rs/toolchain@v1
