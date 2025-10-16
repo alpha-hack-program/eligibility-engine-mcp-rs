@@ -210,6 +210,7 @@ pub struct UnpaidLeaveDirectParams {
     #[schemars(description = "Total number of children you'll have after birth/adoption (0 for illness/accident care)")]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(deserialize_with = "deserialize_f64_or_string")]
+    #[serde(default)]
     pub total_children_after: Option<f64>,
 }
 
@@ -227,6 +228,7 @@ pub struct UnpaidLeaveInput {
     
     #[schemars(description = "Total number of children you'll have after birth/adoption (0 for illness/accident care)")]
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub total_children_after: Option<f64>,
 }
 

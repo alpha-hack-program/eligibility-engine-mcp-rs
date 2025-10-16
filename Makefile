@@ -59,7 +59,7 @@ sgw-mcp: build-stdio
 
 test:
 	@echo "Running all tests..."
-	cargo test
+	cargo test --bin stdio_server
 
 # Release management with cargo-release
 release-patch: 
