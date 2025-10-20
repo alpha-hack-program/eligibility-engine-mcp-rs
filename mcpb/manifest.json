@@ -2,7 +2,7 @@
   "dxt_version": "0.1",
   "name": "eligibility-engine-mcp-server",
   "display_name": "Eligibility Engine MCP Server",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "description": "Eligibility Engine MCP Server",
   "author": {
     "name": "Carlos Vicens"
