@@ -27,8 +27,8 @@ echo "📦 Found version: $VERSION"
 if [ -f "dxt/manifest.json" ]; then
     if command -v jq &> /dev/null; then
         # Use jq for robust JSON editing
-        jq --arg version "$VERSION" '.version = $version | .dxt_version = $version' dxt/manifest.json > dxt/manifest.json.tmp && mv dxt/manifest.json.tmp dxt/manifest.json
-        echo "✅ Updated dxt/manifest.json with version $VERSION"
+        jq --arg version "$VERSION" '.version = $version' dxt/manifest.json > dxt/manifest.json.tmp && mv dxt/manifest.json.tmp dxt/manifest.json
+        echo "✅ Updated dxt/manifest.json version to $VERSION"
     else
         echo "⚠️  jq not found. Please install jq for robust JSON editing:"
         echo "   macOS: brew install jq"

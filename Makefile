@@ -21,7 +21,7 @@ build-all: build-mcp build-sse build-stdio
 pack: build-stdio
 	@echo "Packing MCP server for Claude Desktop..."
 	chmod +x ./target/release/stdio_server
-	zip -rX eligibility-engine-mcp-server.dxt -j dxt/manifest.json ./target/release/stdio_server
+	zip -rX eligibility-engine-mcp-server.mcpb -j mcpb/manifest.json ./target/release/stdio_server
 
 # Test SSE server locally
 test-sse: build-sse
@@ -36,7 +36,7 @@ test-mcp: build-mcp
 	RUST_LOG=debug BIND_ADDRESS=0.0.0.0:8001 ./target/release/mcp_server
 	
 clean:
-	rm -f *.dxt *.zip
+	rm -f *.mcpb *.zip
 	cargo clean
 
 proxy:
