@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Pre-release hook for cargo-release
-# Syncs the version from Cargo.toml to dxt/manifest.json and .env
+# Syncs the version from Cargo.toml to mcpb/manifest.json and .env
 # Also updates Rust source code with .env values
 
 set -e  # Exit on any error
 
-echo "🔄 Syncing version from Cargo.toml to dxt/manifest.json, .env, and Rust source..."
+echo "🔄 Syncing version from Cargo.toml to mcpb/manifest.json, .env, and Rust source..."
 
 # Get version from Cargo.toml using cargo metadata
 if command -v jq &> /dev/null; then
@@ -23,12 +23,12 @@ fi
 
 echo "📦 Found version: $VERSION"
 
-# Update dxt/manifest.json
-if [ -f "dxt/manifest.json" ]; then
+# Update mcpb/manifest.json
+if [ -f "mcpb/manifest.json" ]; then
     if command -v jq &> /dev/null; then
         # Use jq for robust JSON editing
-        jq --arg version "$VERSION" '.version = $version' dxt/manifest.json > dxt/manifest.json.tmp && mv dxt/manifest.json.tmp dxt/manifest.json
-        echo "✅ Updated dxt/manifest.json version to $VERSION"
+        jq --arg version "$VERSION" '.version = $version' mcpb/manifest.json > mcpb/manifest.json.tmp && mv mcpb/manifest.json.tmp mcpb/manifest.json
+        echo "✅ Updated mcpb/manifest.json version to $VERSION"
     else
         echo "⚠️  jq not found. Please install jq for robust JSON editing:"
         echo "   macOS: brew install jq"
@@ -36,7 +36,7 @@ if [ -f "dxt/manifest.json" ]; then
         exit 1
     fi
 else
-    echo "⚠️  dxt/manifest.json not found - skipping"
+    echo "⚠️  mcpb/manifest.json not found - skipping"
 fi
 
 # Update .env file with VERSION
