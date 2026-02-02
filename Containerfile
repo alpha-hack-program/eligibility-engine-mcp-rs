@@ -7,7 +7,7 @@ ARG VERSION=1.0.2
 ARG MAINTAINER="Alpha Hack Group <alpha@github.com>"
 ARG DESCRIPTION="Eligibility Engine MCP Server - Model Context Protocol server for eligibility evaluation"
 ARG APP_NAME=eligibility-engine-mcp-server
-ARG PORT=8001
+ARG PORT=8000
 ARG SOURCE=https://github.com/alpha-hack-program/eligibility-engine-mcp-rs.git
 
 # Multi-stage build
@@ -44,7 +44,7 @@ RUN cargo fetch
 COPY src/ ./src
 
 # Build the application
-RUN cargo build --release --bin sse_server
+RUN cargo build --release --bin mcp_server
 
 # Stage 2: Runtime stage with minimal UBI
 FROM ${BASE_IMAGE}:${BASE_TAG}
@@ -92,7 +92,7 @@ RUN useradd -r -u 1001 -g 0 -s /sbin/nologin \
 WORKDIR /app
 
 # Copy the binary from builder stage
-COPY --from=builder /build/target/release/sse_server /app/sse_server
+COPY --from=builder /build/target/release/mcp_server /app/mcp_server
 
 # Copy data files (if any)
 COPY --from=builder /build/src/common/unpaid-leave-assistance-2025.json /app/unpaid-leave-assistance-2025.json
@@ -100,7 +100,7 @@ COPY --from=builder /build/src/common/unpaid-leave-assistance-2025.json /app/unp
 # Set permissions
 RUN chown -R 1001:0 /app && \
     chmod -R g=u /app && \
-    chmod +x /app/sse_server
+    chmod +x /app/mcp_server
 
 # Switch to non-root user
 USER 1001
@@ -118,4 +118,4 @@ ENV RUST_BACKTRACE=1
 ENV PORT=${PORT}
 
 # Run the application
-CMD ["/app/sse_server"]
+CMD ["/app/mcp_server"]

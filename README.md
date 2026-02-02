@@ -25,7 +25,7 @@ For real legal advice or official information about leave assistance, please con
 
 - **5 Example Evaluation Scenarios**: Demonstrates implementation of complex rule sets (A-E)
 - **Decision Engine Integration**: Shows how to use ZEN Engine for rule-based evaluation
-- **Multiple Transport Protocols**: Examples of STDIO, SSE, and HTTP streamable implementations
+- **Multiple Transport Protocols**: Examples of STDIO, and Streamable HTTP implementations
 - **Robust Input Validation**: Demonstrates JSON schema validation with detailed error handling
 - **Production-Ready Containerization**: Example Docker/Podman setup for deployment
 - **Claude Desktop Integration**: Example MCPB packaging for MCP integration
@@ -77,7 +77,6 @@ cd eligibility-engine-mcp-rs
 make build-all
 
 # Or build individually
-make build-sse      # SSE Server
 make build-mcp      # MCP HTTP Server
 make build-stdio    # STDIO Server for Claude
 ```
@@ -85,14 +84,11 @@ make build-stdio    # STDIO Server for Claude
 ### Running
 
 ```bash
-# SSE Server (recommended for development)
-make test-sse
-
 # MCP HTTP Server
 make test-mcp
 
 # Or directly
-RUST_LOG=debug ./target/release/sse_server
+RUST_LOG=debug ./target/release/mcp_server
 ```
 
 ## 🔧 Configuration
@@ -230,7 +226,6 @@ make test
 ```bash
 make build-all              # Build all servers
 make build-mcp              # Build MCP server (streamable-http)
-make build-sse              # Build SSE server
 make build-stdio            # Build stdio server
 make pack                   # Pack MCP server for Claude Desktop
 ```
@@ -247,7 +242,6 @@ make sync-version           # Manually sync version to all files
 #### 🧪 Test Commands
 ```bash
 make test                   # Run all tests
-make test-sse               # Test SSE server locally
 make test-mcp               # Test MCP server locally
 ```
 
@@ -264,7 +258,6 @@ make help                   # Show all available commands
 │   ├── common/
 │   │   ├── eligibility_engine.rs         # MCP logic and decision engine
 │   │   └── mod.rs
-│   ├── sse_server.rs                      # SSE Server
 │   ├── mcp_server.rs                      # MCP HTTP Server
 │   └── stdio_server.rs                    # STDIO Server
 ├── scripts/                               # Utility scripts
@@ -283,17 +276,17 @@ make help                   # Show all available commands
 
 ### Debug and Monitoring
 
-First run the SSE server (or the Streamable HTTP version with `make test-mcp`):
+First run the Streamable HTTP server:
 
 ```bash
-$ make test-sse
-cargo build --release --bin sse_server
+$ make test-mcp
+cargo build --release --bin mcp_server
    Compiling eligibility-engine-mcp-server v1.0.6 (/Users/cvicensa/Projects/rust/claude/eligibility-engine-mcp-rs)
     Finished `release` profile [optimized] target(s) in 18.26s
-🧪 Testing SSE server...
+🧪 Testing Streamable HTTP server...
 
-RUST_LOG=debug ./target/release/sse_server
-2025-09-22T16:53:01.931985Z  INFO sse_server: Starting sse Eligibility Engine MCP server on 127.0.0.1:8000
+RUST_LOG=debug ./target/release/mcp_server
+2025-09-22T16:53:01.931985Z  INFO mcp_server: Starting Streamable HTTP Eligibility Engine MCP server on 127.0.0.1:8000
 ```
 
 Second, run MCP inspector:
@@ -321,19 +314,6 @@ Troubleshooting:
 MCP error -32602: failed to deserialize parameters: missing field `is_single_parent`
 
 Just click on the checkbox `is_single_parent` and try again.
-
-Additional targets:
-
-```bash
-# Debug proxy
-make proxy                  # Start mitmproxy on port 8888
-
-# Supergateway for SSE
-make sgw-sse               # STDIO -> SSE wrapping
-
-# Supergateway for MCP
-make sgw-mcp               # STDIO -> MCP HTTP wrapping
-```
 
 ## 📚 API Reference
 

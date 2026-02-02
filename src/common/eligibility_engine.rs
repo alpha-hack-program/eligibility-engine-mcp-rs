@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize, Deserializer, de::Error as DeError};
 use zen_engine::DecisionEngine;
 use zen_engine::model::DecisionContent;
-use zen_engine::{EvaluationError, NodeError};
+use zen_engine::EvaluationError;
 use std::fmt;
 
 use super::metrics::{increment_requests, increment_errors, RequestTimer};
@@ -286,7 +286,7 @@ impl UnpaidLeaveDecisionEngine {
         Self
     }
 
-    async fn evaluate_unpaid_leave(&self, request: &UnpaidLeaveRequest) -> Result<UnpaidLeaveResponse, UnpaidLeaveError> {
+    fn evaluate_unpaid_leave(&self, request: &UnpaidLeaveRequest) -> Result<UnpaidLeaveResponse, UnpaidLeaveError> {
         // Load the decision from the JSON file
         let decision_content: DecisionContent = 
             serde_json::from_str(include_str!("unpaid-leave-assistance-2025.json"))
@@ -297,7 +297,7 @@ impl UnpaidLeaveDecisionEngine {
         // Convert struct to JSON and then to Variable
         let json_value = serde_json::to_value(request)?;
         
-        match decision.evaluate(json_value.into()).await {
+        match futures::executor::block_on(decision.evaluate(json_value.into())) {
             Ok(result) => {
                 // Convert result from Variable to Value and then deserialize directly
                 let result_value: serde_json::Value = result.result.into();
@@ -318,8 +318,9 @@ impl UnpaidLeaveDecisionEngine {
     
     // Helper function to extract validation errors from ZEN error
     fn extract_validation_errors(error: &EvaluationError) -> Option<Vec<ValidationError>> {
-        if let EvaluationError::NodeError(node_error) = error {
-            if let Some(errors) = Self::extract_from_node_error(node_error) {
+        if let EvaluationError::NodeError { source, .. } = error {
+            let source_str = format!("{:?}", source);
+            if let Some(errors) = Self::extract_json_from_string(&source_str) {
                 return Some(errors);
             }
         }
@@ -328,10 +329,6 @@ impl UnpaidLeaveDecisionEngine {
         Self::extract_from_error_string(&error_str)
     }
     
-    fn extract_from_node_error(node_error: &NodeError) -> Option<Vec<ValidationError>> {
-        let source_str = format!("{:?}", node_error.source);
-        Self::extract_json_from_string(&source_str)
-    }
     
     fn extract_from_error_string(error_str: &str) -> Option<Vec<ValidationError>> {
         Self::extract_json_from_string(error_str)
@@ -442,52 +439,36 @@ impl EligibilityEngine {
             }
         };
 
-        // Use tokio::task::spawn_blocking for operations that are not Send
-        let result = tokio::task::spawn_blocking(move || {
-            // Create a tokio runtime for the async operation inside the blocking block
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            rt.block_on(async move {
-                let engine = UnpaidLeaveDecisionEngine::new();
-                engine.evaluate_unpaid_leave(&request).await
-            })
-        }).await;
+        // Evaluate synchronously since zen-engine types are not Send
+        let engine = UnpaidLeaveDecisionEngine::new();
+        let eval_result = engine.evaluate_unpaid_leave(&request);
         
-        match result {
-            Ok(eval_result) => {
-                match eval_result {
-                    Ok(response) => {
-                        // Serialize the response to JSON and return as success
-                        match serde_json::to_string_pretty(&response) {
-                            Ok(json_str) => Ok(CallToolResult::success(vec![Content::text(json_str)])),
-                            Err(e) => {
-                                increment_errors();
-                                Ok(CallToolResult::error(vec![Content::text(format!(
-                                    "Error serializing response: {}", e
-                                ))]))
-                            }
-                        }
-                    },
+        match eval_result {
+            Ok(response) => {
+                // Serialize the response to JSON and return as success
+                match serde_json::to_string_pretty(&response) {
+                    Ok(json_str) => Ok(CallToolResult::success(vec![Content::text(json_str)])),
                     Err(e) => {
                         increment_errors();
-                        let error_msg = match e {
-                            UnpaidLeaveError::ValidationError(validation_errors) => {
-                                let mut msg = "Validation errors:\n".to_string();
-                                for error in validation_errors {
-                                    msg.push_str(&format!("  - Field '{}': {}\n", error.path, error.message));
-                                }
-                                msg
-                            },
-                            _ => format!("Evaluation error: {}", e)
-                        };
-                        Ok(CallToolResult::error(vec![Content::text(error_msg)]))
+                        Ok(CallToolResult::error(vec![Content::text(format!(
+                            "Error serializing response: {}", e
+                        ))]))
                     }
                 }
             },
-            Err(join_error) => {
+            Err(e) => {
                 increment_errors();
-                Ok(CallToolResult::error(vec![Content::text(format!(
-                    "Internal error: {}", join_error
-                ))]))
+                let error_msg = match e {
+                    UnpaidLeaveError::ValidationError(validation_errors) => {
+                        let mut msg = "Validation errors:\n".to_string();
+                        for error in validation_errors {
+                            msg.push_str(&format!("  - Field '{}': {}\n", error.path, error.message));
+                        }
+                        msg
+                    },
+                    _ => format!("Evaluation error: {}", e)
+                };
+                Ok(CallToolResult::error(vec![Content::text(error_msg)]))
             }
         }
     }
