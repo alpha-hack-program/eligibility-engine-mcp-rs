@@ -479,7 +479,7 @@ impl ServerHandler for EligibilityEngine {
     fn get_info(&self) -> ServerInfo {
         // Read basic information from .env file (replaced by sync script during release)
         let name = "eligibility-engine-mcp-rs".to_string();
-        let version = "1.1.3".to_string();
+        let version = "2.0.2".to_string();
         let title = "Eligibility Engine MCP Server".to_string();
 
         ServerInfo {
